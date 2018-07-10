@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+KEY="IYew6u6cRN1P8y7aIBoc2A"
+
+if [[ $1 == "rating" ]]; then
+    curl -s -X "GET" --data "key=$KEY" --data "q=$2" "https://www.goodreads.com/search.xml" \
+        | grep -o "<average_rating>.*" \
+        | sed "s:.*<average_rating>\(.*\)<\/average_rating>:\1:p" \
+        | awk 'NR==1 {print $0}'
+else
+    echo "Option not supported $1"
+fi
+
