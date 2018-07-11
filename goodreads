@@ -3,7 +3,7 @@
 KEY="IYew6u6cRN1P8y7aIBoc2A"
 
 # function to return book ID given book title as argument 
-book_id() {
+book_id () {
     book_title=$1
     id=$(curl -s -X "GET" --data "key=$KEY" --data "q=$book_title" "https://www.goodreads.com/search.xml" \
         | grep -o "<id .*" \
@@ -12,30 +12,59 @@ book_id() {
     echo $id
 }
 
-if [[ $1 == "rating" ]]; then
-    # rating of the book (float)
-    curl -s -X "GET" --data "key=$KEY" --data "q=$2" "https://www.goodreads.com/search.xml" \
-        | grep -o "<average_rating>.*" \
-        | sed "s:.*<average_rating>\(.*\)<\/average_rating>:\1:p" \
-        | awk 'NR==1 {print $0}'
-elif [[ $1 == "desc" ]]; then
-    # description of the book by title
-    curl -s -X "GET" --data "key=$KEY" --data "title=$2" "https://www.goodreads.com/book/title.xml" \
-        | grep -o "<description.*CDATA.*<\/description>"  \
-        | sed "s/<\!\[CDATA\[//g" \
-        | sed "s/<[^>]*>//g" \
-        | sed "s/\]\].*//g"
-elif [[ $1 == "author" ]]; then
-    # top books for the author
-    uri="https://www.goodreads.com/api/author_url/id=$2"
-    author_id=$(curl -s -X "GET" -d "id=$2" -d "key=$KEY" $uri \
-        | grep "<author.*" \
-        | awk -F '"' '{print $2}')
-    author_uri="https://www.goodreads.com/author/show/$author_id"
-    curl -s -X "GET" -d "key=$KEY" $author_uri \
-        | grep "<title.*<\/title>" \
-        | sed "s/<[^>]*>//g"
-else
-    echo "Option not supported: $1"
-fi
+show_help () {
+    echo "Usage:"
+    echo "goodreads <option> <argument>"
+    echo
+    echo "Commands: "
+    echo "author <string>   : returns top books from author name"
+    echo "rating <title     : returns rating for book by name"
+    echo "desc <string>     : returns description of book by name"
+    echo "user <id>         : returns books from user id"
+}
 
+if [[ $# = 0 ]]; then
+    show_help;
+else
+    arg=$1
+
+    case $arg in
+        "rating" )
+            # rating of the book (float)
+            curl -s -X "GET" --data "key=$KEY" --data "q=$2" "https://www.goodreads.com/search.xml" \
+                | grep -o "<average_rating>.*" \
+                | sed "s:.*<average_rating>\(.*\)<\/average_rating>:\1:p" \
+                | awk 'NR==1 {print $0}'
+            ;;
+        "desc"  )
+            # description of the book by title
+            curl -s -X "GET" --data "key=$KEY" --data "title=$2" "https://www.goodreads.com/book/title.xml" \
+                | grep -o "<description.*CDATA.*<\/description>"  \
+                | sed "s/<\!\[CDATA\[//g" \
+                | sed "s/<[^>]*>//g" \
+                | sed "s/\]\].*//g"
+            ;;
+        "author" )
+            # top books for the author
+            # TODO: add option to list all books by author
+            uri="https://www.goodreads.com/api/author_url/id=$2"
+            author_id=$(curl -s -X "GET" -d "id=$2" -d "key=$KEY" $uri \
+                | grep "<author.*" \
+                | awk -F '"' '{print $2}')
+            author_uri="https://www.goodreads.com/author/show/$author_id"
+            curl -s -X "GET" -d "key=$KEY" $author_uri \
+                | grep "<title.*<\/title>" \
+                | sed "s/<[^>]*>//g" \
+                | sed "s/^[ \t]*/- /g"
+            ;;
+        "user" )
+            user_uri="https://www.goodreads.com/user/show/$2.xml"
+            curl -s -X "GET" -d "key=$KEY" $user_uri \
+                | grep "<title>.*" \
+                | sed "s/<[^>]*>//g" \
+                | sed "s/^[ \t]*/- /g"
+            ;;
+        "help" )
+            show_help;
+    esac
+fi
