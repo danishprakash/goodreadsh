@@ -2,16 +2,6 @@
 
 KEY="IYew6u6cRN1P8y7aIBoc2A"
 
-# function to return book ID given book title as argument 
-book_id () {
-    book_title=$1
-    id=$(curl -s -X "GET" --data "key=$KEY" --data "q=$book_title" "https://www.goodreads.com/search.xml" \
-        | grep -o "<id .*" \
-        | sed "s:.*<id.*>\(.*\)<\/id>:\1:p" \
-        | awk 'NR==2 {print $0}')
-    echo $id
-}
-
 show_help () {
     echo "Usage:"
     echo "goodreads <option> <argument>"
@@ -65,6 +55,13 @@ else
                         | sed "s/\]\].*//g"
                     ;;
 
+                "--id" )
+                    curl -s -X "GET" --data "key=$KEY" --data "q=$3" "https://www.goodreads.com/search.xml" \
+                        | grep -o "<id .*" \
+                        | sed "s:.*<id.*>\(.*\)<\/id>:\1:p" \
+                        | awk 'NR==2 {print $0}'
+                    ;;
+
                 * )
                     echo "Option not found: \`$2\`"
                     echo
@@ -75,18 +72,33 @@ else
             ;;
 
         "author" )
-            # top books for the author
             # TODO: add option to list all books by author
-            uri="https://www.goodreads.com/api/author_url/id=$2"
-            author_id=$(curl -s -X "GET" -d "id=$2" -d "key=$KEY" $uri \
+            uri="https://www.goodreads.com/api/author_url/id=$3"
+            author_id=$(curl -s -X "GET" -d "key=$KEY" $uri \
                 | grep "<author.*" \
                 | awk -F '"' '{print $2}')
 
-            author_uri="https://www.goodreads.com/author/show/$author_id"
-            curl -s -X "GET" -d "key=$KEY" $author_uri \
-                | grep "<title.*<\/title>" \
-                | sed "s/<[^>]*>//g" \
-                | sed "s/^[ \t]*/- /g"
+            option=$2
+            case $option in
+
+                "--books" )
+                    author_uri="https://www.goodreads.com/author/show/$author_id"
+                    curl -s -X "GET" -d "key=$KEY" $author_uri \
+                        | grep "<title.*<\/title>" \
+                        | sed "s/<[^>]*>//g" \
+                        | sed "s/^[ \t]*//g"
+                    ;;
+
+                "--id" )
+                    echo $author_id
+                    ;;
+
+                * )
+                    echo "Option not found: \`$2\`"
+                    echo
+                    show_help;
+                    ;;
+            esac
             ;;
 
         "user" )
@@ -97,7 +109,7 @@ else
             curl -s -X "GET" -d "key=$KEY" -d "shelf=$shelf" -d "id=$4" "per_page=100" $user_uri \
                 | grep "<title>.*" \
                 | sed "s/<[^>]*>//g" \
-                | sed "s/^[ \t]*/- /g"
+                | sed "s/^[ \t]*//g"
             ;;
 
         "help" )
