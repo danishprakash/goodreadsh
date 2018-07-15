@@ -19,11 +19,11 @@ else
     arg=$1
     case $arg in
 
-        "book" )
+        book|b )
             option=$2
             case $option in
 
-                "--rating-dist" )
+                --rating-dist|-R )
                     curl  -s -X "GET" -d "title=$3" -d "key=$KEY" "https://www.goodreads.com/book/title.xml" \
                         | grep "<rating_dist>.*" \
                         | sed "s/<[^>]*>//g" \
@@ -31,14 +31,14 @@ else
                         | awk -F ':' '{print "✪✪✪✪✪ \t: "$2 "\n" "✪✪✪✪ \t: "$4 "\n" "✪✪✪ \t: "$6 "\n" "✪✪ \t: "$8 "\n" "✪ \t: "$10 "\n\nTotal\t: " $12}'
                     ;;
 
-                "--rating" )
+                --rating|-r )
                     curl -s -X "GET" -d "key=$KEY" -d "q=$3" "https://www.goodreads.com/search.xml" \
                         | grep -o "<average_rating>.*" \
                         | sed "s:.*<average_rating>\(.*\)<\/average_rating>:\1:p" \
                         | awk 'NR==1 {print $0}'
                     ;;
 
-                "--author" )
+                --author|-a )
                     curl -s -X "GET" --data "key=$KEY" --data "q=$3" "https://www.goodreads.com/search.xml" \
                         | grep "<name>.*" \
                         | sed "s/^[ \t]*//g" \
@@ -46,7 +46,7 @@ else
                         | awk 'NR==1 {print $0}'
                     ;;
 
-                "--desc"  )
+                --desc|-d  )
                     # description of the book by title
                     curl -s -X "GET" --data "key=$KEY" --data "title=$3" "https://www.goodreads.com/book/title.xml" \
                         | grep -o "<description.*CDATA.*<\/description>"  \
@@ -55,7 +55,7 @@ else
                         | sed "s/\]\].*//g"
                     ;;
 
-                "--id" )
+                --id )
                     curl -s -X "GET" --data "key=$KEY" --data "q=$3" "https://www.goodreads.com/search.xml" \
                         | grep -o "<id .*" \
                         | sed "s:.*<id.*>\(.*\)<\/id>:\1:p" \
@@ -71,17 +71,16 @@ else
             esac
             ;;
 
-        "author" )
+        author|a )
             # TODO: add option to list all books by author
-            uri="https://www.goodreads.com/api/author_url/id=$3"
-            author_id=$(curl -s -X "GET" -d "key=$KEY" $uri \
-                | grep "<author.*" \
-                | awk -F '"' '{print $2}')
+            title=$(echo $3 | sed "s/\ /%20/g")
+            uri="https://www.goodreads.com/api/author_url/$title"
+            author_id=$(curl -s -X "GET" -d "key=$KEY" $uri | grep "<author.*" | awk -F '"' '{print $2}')
 
             option=$2
             case $option in
 
-                "--books" )
+                --books|-b )
                     author_uri="https://www.goodreads.com/author/show/$author_id"
                     curl -s -X "GET" -d "key=$KEY" $author_uri \
                         | grep "<title.*<\/title>" \
@@ -89,7 +88,37 @@ else
                         | sed "s/^[ \t]*//g"
                     ;;
 
-                "--id" )
+                --all-books|-B )
+                    author_uri="https://www.goodreads.com/search/index.xml"
+                    curl -s -X "GET" -d "key=$KEY" -d "q=$3" -d "search=author" $author_uri \
+                        | grep "<title.*<\/title>" \
+                        | sed "s/<[^>]*>//g" \
+                        | sed "s/^[ \t]*//g"
+                    ;;
+
+                --info|-i )
+                    author_uri="https://www.goodreads.com/author/show.xml"
+                    curl -s -X "GET" -d "key=$KEY" -d "id=$author_id" $author_uri \
+                        | grep "<works_count>.*\|<gender>.*\|<hometown>.*\|<born_at>.*\|<died_at>.*" \
+                        | sed "s/<[^>]*>//g" \
+                        | sed "s/[ \t]*//g" \
+                        | awk 'NR==1 {print "Works: " $0} \
+                        NR==2 {print "Gender: " $0} \
+                        NR==3 {print "Hometown: " $0} \
+                        NR==4 {print "Born: " $0} \
+                        NR==5 {print "Died: " $0}'
+                    ;;
+
+                --about|-a  )
+                    author_uri="https://www.goodreads.com/author/show.xml"
+                    curl -s -X "GET" -d "key=$KEY" -d "id=$author_id" $author_uri \
+                        | grep -o "<about.*CDATA.*<\/about>"  \
+                        | sed "s/<\!\[CDATA\[//g" \
+                        | sed "s/<[^>]*>//g" \
+                        | sed "s/\]\].*//g"
+                    ;;
+
+                --id )
                     echo $author_id
                     ;;
 
@@ -101,7 +130,7 @@ else
             esac
             ;;
 
-        "user" )
+        user|u )
             user_uri="https://www.goodreads.com/review/list"
 
             if [[ $2 == "--shelf" ]]; then shelf=$3; else shelf=""; fi;
@@ -112,7 +141,7 @@ else
                 | sed "s/^[ \t]*//g"
             ;;
 
-        "help" )
+        help|h )
             show_help;
     esac
 fi
