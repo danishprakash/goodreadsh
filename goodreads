@@ -1,8 +1,30 @@
 #!/usr/bin/env bash
 
+# MIT License
+
+# Copyright (c) 2018 Danish Prakash
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+ 
 KEY="IYew6u6cRN1P8y7aIBoc2A"
 
-show_help () {
+function show_help () {
     echo "Usage:"
     echo "goodreads <option> <argument>"
     echo
@@ -15,6 +37,7 @@ show_help () {
 
 if [[ $# = 0 ]]; then
     show_help;
+    exit
 else
     arg=$1
     case $arg in
@@ -72,7 +95,6 @@ else
             ;;
 
         author|a )
-            # TODO: add option to list all books by author
             title=$(echo $3 | sed "s/\ /%20/g")
             uri="https://www.goodreads.com/api/author_url/$title"
             author_id=$(curl -s -X "GET" -d "key=$KEY" $uri | grep "<author.*" | awk -F '"' '{print $2}')
@@ -131,15 +153,52 @@ else
             ;;
 
         user|u )
-            user_uri="https://www.goodreads.com/review/list"
+            user_id="Try again."
+            function get_user_id () {
+                user_id=$(curl -s -X "GET" -d "key=$KEY" -d "username=$1" "https://www.goodreads.com/user/show/" \
+                    | grep "<id>.*" \
+                    | sed "s/<[^>]*>//g" \
+                    | sed "s/[ \t]*//g" \
+                    | awk 'NR==1 {print $0}')
+            }
 
-            if [[ $2 == "--shelf" ]]; then shelf=$3; else shelf=""; fi;
+            option=$2
+            case $option in
 
-            curl -s -X "GET" -d "key=$KEY" -d "shelf=$shelf" -d "id=$4" "per_page=100" $user_uri \
-                | grep "<title>.*" \
-                | sed "s/<[^>]*>//g" \
-                | sed "s/^[ \t]*//g"
-            ;;
+                --shelf|-s )
+                    user_uri="https://www.goodreads.com/review/list"
+                    if [[ $4 == ^[0-9]+ ]]; then user_id=$4; else get_user_id $4; fi;
+                    curl -s -X "GET" -d "key=$KEY" -d "shelf=$3" -d "id=$user_id" -d "per_page=100" $user_uri \
+                        | grep "<title>.*" \
+                        | sed "s/<[^>]*>//g" \
+                        | sed "s/^[ \t]*//g"
+                    ;;
+
+                --id|-i )
+                    get_user_id $3;
+                    echo $user_id
+                    ;;
+
+                --about|-a )
+                    if [[ $3 =~ ^[0-9]+ ]]; then user_id=$3; else get_user_id $3; fi;
+                    curl -s -X "GET" -d "key=$KEY" -d "id=$user_id" "https://www.goodreads.com/user/show/" \
+                        | grep "<name>.*\|<age>.*\|<gender>.*\|<location>.*\|<joined>.*" \
+                        | sed "s/<[^>]*>//g" \
+                        | sed "s/^[ \t]*//g" \
+                        | awk 'NR==1 {print "Name: " $0} \
+                        NR==2 {print "Age: " $0} \
+                        NR==3 {print "Gender: " $0} \
+                        NR==4 {print "Location: " $0}'
+                    ;;
+
+                * )
+                    echo "Option not found: \`$2\`"
+                    echo
+                    show_help;
+                    ;;
+
+                esac
+                ;;
 
         help|h )
             show_help;
