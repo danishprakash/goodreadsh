@@ -4,6 +4,14 @@
 
 ## Installation
 
+#### Homebrew
+Easiest way to install on macOS is by using [Homebrew](https://brew.sh).
+
+```console
+$ brew tap prakashdanish/homebrew-formulae
+$ brew install goodreadsh
+```
+
 #### Manual installation
 1. Clone this repository.
 2. Grant executable permission to `goodreads`
