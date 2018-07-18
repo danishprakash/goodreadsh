@@ -21,9 +21,15 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
- 
-KEY="IYew6u6cRN1P8y7aIBoc2A"
 
+USER_DEVELOPER_KEY="DEVELOPER_KEY=\"\""
+USER_CONFIG_FILE="$HOME/.goodreads.conf"
+if ! [[ -f "$USER_CONFIG_FILE" ]]; then
+    touch "$USER_CONFIG_FILE"
+    echo -e "$USER_DEVELOPER_KEY" > "$USER_CONFIG_FILE"
+fi
+source "$USER_CONFIG_FILE"
+ 
 function show_help () {
     echo "Usage: "
     echo "  goodreads [option]"
@@ -49,7 +55,7 @@ case $arg in
         case $option in
 
             --rating-dist|-R )
-                curl  -s -X "GET" -d "title=$3" -d "key=$KEY" "https://www.goodreads.com/book/title.xml" \
+                curl  -s -X "GET" -d "title=$3" -d "key=$DEVELOPER_KEY" "https://www.goodreads.com/book/title.xml" \
                     | grep "<rating_dist>.*" \
                     | sed "s/<[^>]*>//g" \
                     | sed "s/\|/:/g" \
@@ -57,14 +63,14 @@ case $arg in
                 ;;
 
             --rating|-r )
-                curl -s -X "GET" -d "key=$KEY" -d "q=$3" "https://www.goodreads.com/search.xml" \
+                curl -s -X "GET" -d "key=$DEVELOPER_KEY" -d "q=$3" "https://www.goodreads.com/search.xml" \
                     | grep -o "<average_rating>.*" \
                     | sed "s:.*<average_rating>\(.*\)<\/average_rating>:\1:p" \
                     | awk 'NR==1 {print $0}'
                 ;;
 
             --author|-a )
-                curl -s -X "GET" --data "key=$KEY" --data "q=$3" "https://www.goodreads.com/search.xml" \
+                curl -s -X "GET" --data "key=$DEVELOPER_KEY" --data "q=$3" "https://www.goodreads.com/search.xml" \
                     | grep "<name>.*" \
                     | sed "s/^[ \t]*//g" \
                     | sed "s/<[^>]*>//g" \
@@ -73,7 +79,7 @@ case $arg in
 
             --desc|-d  )
                 # description of the book by title
-                curl -s -X "GET" --data "key=$KEY" --data "title=$3" "https://www.goodreads.com/book/title.xml" \
+                curl -s -X "GET" --data "key=$DEVELOPER_KEY" --data "title=$3" "https://www.goodreads.com/book/title.xml" \
                     | grep -o "<description.*CDATA.*<\/description>"  \
                     | sed "s/<\!\[CDATA\[//g" \
                     | sed "s/<[^>]*>//g" \
@@ -81,7 +87,7 @@ case $arg in
                 ;;
 
             --id|-g )
-                curl -s -X "GET" --data "key=$KEY" --data "q=$3" "https://www.goodreads.com/search.xml" \
+                curl -s -X "GET" --data "key=$DEVELOPER_KEY" --data "q=$3" "https://www.goodreads.com/search.xml" \
                     | grep -o "<id .*" \
                     | sed "s:.*<id.*>\(.*\)<\/id>:\1:p" \
                     | awk 'NR==2 {print $0}'
@@ -106,7 +112,7 @@ case $arg in
         function gen_author_id () {
             title=$(echo $1 | sed "s/\ /%20/g")
             uri="https://www.goodreads.com/api/author_url/$title"
-            author_id=$(curl -s -X "GET" -d "key=$KEY" $uri | grep "<author.*" | awk -F '"' '{print $2}')
+            author_id=$(curl -s -X "GET" -d "key=$DEVELOPER_KEY" $uri | grep "<author.*" | awk -F '"' '{print $2}')
         }
 
         option=$2
@@ -115,7 +121,7 @@ case $arg in
             --books|-b )
                 gen_author_id $3
                 author_uri="https://www.goodreads.com/author/show/$author_id"
-                curl -s -X "GET" -d "key=$KEY" $author_uri \
+                curl -s -X "GET" -d "key=$DEVELOPER_KEY" $author_uri \
                     | grep "<title.*<\/title>" \
                     | sed "s/<[^>]*>//g" \
                     | sed "s/^[ \t]*//g"
@@ -123,7 +129,7 @@ case $arg in
 
             --all-books|-B )
                 author_uri="https://www.goodreads.com/search/index.xml"
-                curl -s -X "GET" -d "key=$KEY" -d "q=$3" -d "search=author" $author_uri \
+                curl -s -X "GET" -d "key=$DEVELOPER_KEY" -d "q=$3" -d "search=author" $author_uri \
                     | grep "<title.*<\/title>" \
                     | sed "s/<[^>]*>//g" \
                     | sed "s/^[ \t]*//g"
@@ -132,7 +138,7 @@ case $arg in
             --info|-i )
                 gen_author_id $3
                 author_uri="https://www.goodreads.com/author/show.xml"
-                curl -s -X "GET" -d "key=$KEY" -d "id=$author_id" $author_uri \
+                curl -s -X "GET" -d "key=$DEVELOPER_KEY" -d "id=$author_id" $author_uri \
                     | grep "<works_count>.*\|<gender>.*\|<hometown>.*\|<born_at>.*\|<died_at>.*" \
                     | sed "s/<[^>]*>//g" \
                     | sed "s/[ \t]*//g" \
@@ -146,7 +152,7 @@ case $arg in
             --about|-a  )
                 gen_author_id $3
                 author_uri="https://www.goodreads.com/author/show.xml"
-                curl -s -X "GET" -d "key=$KEY" -d "id=$author_id" $author_uri \
+                curl -s -X "GET" -d "key=$DEVELOPER_KEY" -d "id=$author_id" $author_uri \
                     | grep -o "<about.*CDATA.*<\/about>"  \
                     | sed "s/<\!\[CDATA\[//g" \
                     | sed "s/<[^>]*>//g" \
@@ -174,7 +180,7 @@ case $arg in
 
     user|u )
         function get_user_id () {
-            user_id=$(curl -s -X "GET" -d "key=$KEY" -d "username=$1" "https://www.goodreads.com/user/show/" \
+            user_id=$(curl -s -X "GET" -d "key=$DEVELOPER_KEY" -d "username=$1" "https://www.goodreads.com/user/show/" \
                 | grep "<id>.*" \
                 | sed "s/<[^>]*>//g" \
                 | sed "s/[ \t]*//g" \
@@ -192,7 +198,7 @@ case $arg in
             --shelf|-s )
                 user_uri="https://www.goodreads.com/review/list"
                 if [[ $4 == ^[0-9]+ ]]; then user_id=$4; else get_user_id $4; fi;
-                curl -s -X "GET" -d "key=$KEY" -d "shelf=$3" -d "id=$user_id" -d "per_page=100" $user_uri \
+                curl -s -X "GET" -d "key=$DEVELOPER_KEY" -d "shelf=$3" -d "id=$user_id" -d "per_page=100" $user_uri \
                     | grep "<title>.*" \
                     | sed "s/<[^>]*>//g" \
                     | sed "s/^[ \t]*//g"
@@ -200,7 +206,7 @@ case $arg in
 
             --about|-a )
                 if [[ $3 =~ ^[0-9]+ ]]; then user_id=$3; else get_user_id $3; fi;
-                curl -s -X "GET" -d "key=$KEY" -d "id=$user_id" "https://www.goodreads.com/user/show/" \
+                curl -s -X "GET" -d "key=$DEVELOPER_KEY" -d "id=$user_id" "https://www.goodreads.com/user/show/" \
                     | grep "<name>.*\|<age>.*\|<gender>.*\|<location>.*\|<joined>.*" \
                     | sed "s/<[^>]*>//g" \
                     | sed "s/^[ \t]*//g" \
@@ -217,7 +223,7 @@ case $arg in
                 echo "Options:"
                 echo "  -a --about:             show user info"
                 echo "  -g --id:                show goodreads id"
-                echo "  -s --shelf [label]:     show top books by author"
+                echo "  -s --shelf [label]:     show books from given shelf"
                 ;;
 
             esac

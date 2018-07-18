@@ -3,10 +3,9 @@ Command line interface for [Goodreads](https://goodreads.com).
 
 ## Installation
 
-1. Download the `goodreads` executable.
-    1. Clone this repository.
-    2. Grant executable permission to `goodreads`
-    3. Add directory path to `PATH`
+1. Clone this repository.
+2. Grant executable permission to `goodreads`
+3. Add directory path to `PATH`
 ```sh
 $ git clone https://github.com/prakashdanish/goodreadsh && cd goodreadsh
 $ export PATH="$PATH:/path/to/dir"
@@ -36,6 +35,7 @@ Options:
   user:     user related options
 
 
+
 ====
 book
 ====
@@ -49,6 +49,7 @@ Options:
   -a --author:        show author name
   -d --desc:          show book description
   -g --id:            show goodreads id
+
 
 
 ======
@@ -66,6 +67,7 @@ Options:
   -g --id:            show goodreads id
 
 
+
 ====
 user
 ====
@@ -76,5 +78,5 @@ Usage:
 Options:
   -a --about:             show user info
   -g --id:                show goodreads id
-  -s --shelf [label]:     show top books by author
+  -s --shelf [label]:     show books from given shelf
 ```
