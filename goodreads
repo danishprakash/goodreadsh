@@ -38,6 +38,7 @@ function show_help () {
     echo "  book:     book related options"
     echo "  author:   author related options"
     echo "  user:     user related options"
+    echo "  help:     show help message"
     echo
     echo "Enter \`goodreads <option> help\` for more."
 }
