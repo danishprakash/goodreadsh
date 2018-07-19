@@ -1,6 +1,8 @@
 <h1 align="center">goodreadsh</h1>
 <p align="center">Command line interface for <a href="https://goodreads.com" > Goodreads</a></p>
-
+<p align="center">
+<a href="https://i.imgur.com/der2fH7.gif"><img src="https://i.imgur.com/der2fH7.gif" width="600"/></a>
+</p>
 
 ## Installation
 
