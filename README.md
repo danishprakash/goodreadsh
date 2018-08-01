@@ -14,10 +14,15 @@ $ brew tap prakashdanish/homebrew-formulae
 $ brew install goodreadsh
 ```
 
+#### AUR
+Arch users can install with their preferred package manager, I'm using [trizen](https://github.com/trizen/trizen) here.
+
+```console
+$ trizen -S goodreadsh
+```
+
 #### Manual installation
-1. Clone this repository.
-2. Grant executable permission to `goodreads`
-3. Add directory path to `PATH`
+
 ```console
 $ git clone https://github.com/prakashdanish/goodreadsh && cd goodreadsh
 $ export PATH="$PATH:/path/to/dir"
