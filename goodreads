@@ -59,8 +59,8 @@ case $arg in
                 curl  -s -X "GET" -d "title=$3" -d "key=$DEVELOPER_KEY" "https://www.goodreads.com/book/title.xml" \
                     | grep "<rating_dist>.*" \
                     | sed "s/<[^>]*>//g" \
-                    | sed "s/\|/:/g" \
-                    | awk -F ':' '{print "★ ★ ★ ★ ★ : "$2 "\n" "★ ★ ★ ★ ☆ : "$4 "\n" "★ ★ ★ ☆ ☆ : "$6 "\n" "★ ★ ☆ ☆ ☆ : "$8 "\n" "★ ☆ ☆ ☆ ☆ : "$10 "\n\nTotal : " $12}'
+                    | sed "s,[|:], ,g"   \
+                    | awk  '{print "★ ★ ★ ★ ★ : "$2 "\n" "★ ★ ★ ★ ☆ : "$4 "\n" "★ ★ ★ ☆ ☆ : "$6 "\n" "★ ★ ☆ ☆ ☆ : "$8 "\n" "★ ☆ ☆ ☆ ☆ : "$10 "\n\nTotal : " $12}'
                 ;;
 
             --rating|-r )
