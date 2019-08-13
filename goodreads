@@ -56,7 +56,7 @@ case $arg in
         case $option in
 
             --rating-dist|-R )
-                curl  -s -X "GET" -d "title=$3" -d "key=$DEVELOPER_KEY" "https://www.goodreads.com/book/title.xml" \
+                curl  -s -X "GET" -d "title=\"$3\"" -d "key=$DEVELOPER_KEY" "https://www.goodreads.com/book/title.xml" \
                     | grep "<rating_dist>.*" \
                     | sed "s/<[^>]*>//g" \
                     | sed "s,[|:], ,g"   \
@@ -64,14 +64,14 @@ case $arg in
                 ;;
 
             --rating|-r )
-                curl -s -X "GET" -d "key=$DEVELOPER_KEY" -d "q=$3" "https://www.goodreads.com/search.xml" \
+                curl -s -X "GET" -d "key=$DEVELOPER_KEY" -d "q=\"$3\"" "https://www.goodreads.com/search.xml" \
                     | grep -o "<average_rating>.*" \
                     | sed "s:.*<average_rating>\(.*\)<\/average_rating>:\1:p" \
                     | awk 'NR==1 {print $0}'
                 ;;
 
             --author|-a )
-                curl -s -X "GET" --data "key=$DEVELOPER_KEY" --data "q=$3" "https://www.goodreads.com/search.xml" \
+                curl -s -X "GET" --data "key=$DEVELOPER_KEY" --data "q=\"$3\"" "https://www.goodreads.com/search.xml" \
                     | grep "<name>.*" \
                     | sed "s/^[ \t]*//g" \
                     | sed "s/<[^>]*>//g" \
@@ -80,7 +80,7 @@ case $arg in
 
             --desc|-d  )
                 # description of the book by title
-                curl -s -X "GET" --data "key=$DEVELOPER_KEY" --data "title=$3" "https://www.goodreads.com/book/title.xml" \
+                curl -s -X "GET" --data "key=$DEVELOPER_KEY" --data "title=\"$3\"" "https://www.goodreads.com/book/title.xml" \
                     | grep -o "<description.*CDATA.*<\/description>"  \
                     | sed "s/<\!\[CDATA\[//g" \
                     | sed "s/<[^>]*>//g" \
@@ -88,7 +88,7 @@ case $arg in
                 ;;
 
             --id|-g )
-                curl -s -X "GET" --data "key=$DEVELOPER_KEY" --data "q=$3" "https://www.goodreads.com/search.xml" \
+                curl -s -X "GET" --data "key=$DEVELOPER_KEY" --data "q=\"$3\"" "https://www.goodreads.com/search.xml" \
                     | grep -o "<id .*" \
                     | sed "s:.*<id.*>\(.*\)<\/id>:\1:p" \
                     | awk 'NR==2 {print $0}'
@@ -130,7 +130,7 @@ case $arg in
 
             --all-books|-B )
                 author_uri="https://www.goodreads.com/search/index.xml"
-                curl -s -X "GET" -d "key=$DEVELOPER_KEY" -d "q=$3" -d "search=author" $author_uri \
+                curl -s -X "GET" -d "key=$DEVELOPER_KEY" -d "q="$3"" -d "search=author" $author_uri \
                     | grep "<title.*<\/title>" \
                     | sed "s/<[^>]*>//g" \
                     | sed "s/^[ \t]*//g"
